@@ -128,7 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-
 # R project files
 .Rproj.user
 bulkyBERT.Rproj
@@ -136,3 +135,5 @@ bulkyBERT.Rproj
 # data files
 data/*.csv
 
+# Pycharm
+.idea
