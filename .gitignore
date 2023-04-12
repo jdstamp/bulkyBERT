@@ -127,3 +127,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+# R project files
+.Rproj.user
+bulkyBERT.Rproj
+
+# data files
+data/*
