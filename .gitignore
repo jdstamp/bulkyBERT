@@ -134,4 +134,5 @@ dmypy.json
 bulkyBERT.Rproj
 
 # data files
-data/*
+data/*.csv
+
