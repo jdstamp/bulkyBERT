@@ -22,12 +22,12 @@ simulate_expression_data <- function(){
   xx <- rsgns.rn(rsg, rp, timeseries=FALSE, sample=100)
   return(xx$expression)
 }
-X <- simulate_expression_data()
+X <- t(simulate_expression_data())
 ggplot(data = melt(X), aes(x = Var1, y = Var2, fill=value)) +
   geom_tile()
 
 stacked_array <- abind(X, X, X, X, X, X, along=3)
-stacked_labels <- c(1, 2, 1, 1, 1, 2)
+stacked_labels <- c(0, 1, 0, 0, 1, 0)
 
 h5_file <- "myhdf5file.h5"
 h5createFile(h5_file)
