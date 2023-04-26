@@ -137,3 +137,4 @@ data/*.csv
 
 # Pycharm
 .idea
+.DS_Store
