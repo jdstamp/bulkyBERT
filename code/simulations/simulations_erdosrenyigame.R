@@ -32,7 +32,8 @@ simulation <- function(g, timep) {## Changes graphical structure a bit -
                 rsg <- new("rsgns.data",network=g, rconst=rc)
                 #Call the R function for SGN simulator
                 xx <- rsgns.rn(rsg, rp, timeseries=TRUE)
-                return(xx)}
+                return(xx)
+ }
 
 genes = 20
 time_points = 15
