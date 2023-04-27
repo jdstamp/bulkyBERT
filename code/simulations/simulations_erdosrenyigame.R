@@ -1,6 +1,3 @@
-################################ CODE TO RUN sgnesR using erdos.renyi.game ################################
-
-## Load library
 library(sgnesR)
 library(abind)
 library(rhdf5)
