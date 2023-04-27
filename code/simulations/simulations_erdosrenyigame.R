@@ -35,11 +35,11 @@ simulation <- function(g, timep) {## Changes graphical structure a bit -
                 return(xx)
  }
 
-genes = 20
-time_points = 15
+genes <- 20
+time_points <- 15
 network <- network_generator(genes)
-l = 100
-num_networks = 2
+l <- 100
+num_networks <- 2
 
 stacked_labels <- NULL
 stacked_expression <- NULL
