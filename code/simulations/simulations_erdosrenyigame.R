@@ -3,6 +3,7 @@
 ## Load library
 library(sgnesR)
 library(abind)
+library(rhdf5)
 
 network_generator <- function(ngen){
                         ##Generation of a random scale-free network with 20 nodes using an Erdos-Renyi network model. Time points: 15, genes:
@@ -19,7 +20,7 @@ simulation <- function(g, timep) {## Changes graphical structure a bit -
                 sm <- sample(c(1,-1), ecount(g), rep=TRUE, p=c(.8,.2))
                 E(g)$op <- sm
 
-                end_time = timep*500 -500
+                end_time = timep * 500 - 500
                 # Specifying global reaction parameters. Defines the initial parameters which include “start time”, “stop time” and “read-out interval” for time series data
                 rp<-new("rsgns.param",time=0,stop_time=end_time,readout_interval=500)
 
@@ -41,20 +42,27 @@ network <- network_generator(genes)
 l = 100
 num_networks = 2
 
-total_expression <- array(rep(1, genes*time_points*labels), dim=c(labels, genes, time_points))
-total_expression <- data.frame(matrix(nrow = genes, ncol = time_points))
+stacked_labels <- NULL
+stacked_expression <- NULL
 
 for (g in 1:num_networks){
   for (i in 1:l){
     exp <- simulation(network, time_points)
-    if (i == 1){
-      total_expression <- exp$expression
-      labels <- g
-    }
-    else{
-      total_expression <- abind(exp$expression, total_expression, along = 3)
-      labels <- rbind(g, labels)
-    }
+    stacked_expression <- abind(exp$expression, stacked_expression, along = 3)
+    stacked_labels <- rbind(g, stacked_labels)
   }
 }
+
+h5_file <- "sim_erdosrenyi.h5"
+h5createFile(h5_file)
+h5createGroup(h5_file,"expression")
+
+h5write(stacked_expression, h5_file, "expression/data")
+h5write(stacked_labels, h5_file, "expression/labels")
+
+## CODE TO READ IN FILE ##
+#file <- h5read(file = "sim_erdosrenyi.h5",
+#                 name = "expression/data")
+#file <- h5read(file = "sim_erdosrenyi.h5",
+#                 name = "expression/labels")
 

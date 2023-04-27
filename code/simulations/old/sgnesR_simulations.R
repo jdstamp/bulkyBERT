@@ -15,7 +15,6 @@ V(g)$Rpop <- (sample(100, vcount(g), rep=TRUE))
 sm <- sample(c(1,-1), ecount(g), rep=TRUE, p=c(.8,.2))
 E(g)$op <- sm
 
-<<<<<<< Updated upstream
 # Specifying global reaction parameters. Defines the initial parameters which include “start time”, “stop time” and “read-out interval” for time series data
 rp<-new("rsgns.param",time=0,stop_time=1000,readout_interval=500)
 
@@ -32,8 +31,6 @@ rsg <- new("rsgns.data",network=g, rconst=rc)
 xx <- rsgns.rn(rsg, rp)
 
 ################################ CODE TO RUN sgnesR using own edge definition ################################
-#DISADVANTAGES:
-# - not all nodes may be connected which seems to be neccessary
 
 ##Generation of a random scale-free network with 20 nodes using an Erdos-Renyi network model. Time points: 15, genes:
 g <- sample_gnm(20,40, directed=TRUE, loops = FALSE)
