@@ -29,3 +29,7 @@ To collaborate on a git repository, we need to work with branching. The main bra
 7. Go to GitHub and create pull request to merge into `main`.
 8. Assign reviewers to have them notified. 
 9. Wait for reviews, address change requests, and eventually merge.
+
+
+# References
+- https://www.tensorflow.org/text/tutorials/transformer
