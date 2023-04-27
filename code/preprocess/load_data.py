@@ -1,23 +1,23 @@
-import pandas as pd
 import tensorflow as tf
+import h5py
+import numpy as np
 
-train_examples = pd.read_csv("/Users/jds/git/bulkyBERT/train_data.csv.gz",
-                             compression="gzip",
-                             index_col=0)
-                             
-train_labels = train_examples["label"]
-train_examples = train_examples.drop(["label"], axis = 1)
+hf = h5py.File("/Users/jds/git/bulkyBERT/myhdf5file.h5", "r")
+train_examples = hf.get("expression/data")[:]
+train_labels = hf.get("expression/labels")[:]
 
 train_dataset = tf.data.Dataset.from_tensor_slices((train_examples, train_labels))
 print(train_dataset)
 BATCH_SIZE = 2
 SHUFFLE_BUFFER_SIZE = 3
 
+
 train_dataset = train_dataset.shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_SIZE)
 
 model = tf.keras.Sequential([
-    tf.keras.layers.Dense(50, activation='relu'),
-    tf.keras.layers.Dense(5)
+    tf.keras.layers.Flatten(input_shape=(10, 100)),
+    tf.keras.layers.Dense(100, activation='relu'),
+    tf.keras.layers.Dense(2)
 ])
 
 model.compile(optimizer=tf.keras.optimizers.RMSprop(),
