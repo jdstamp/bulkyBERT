@@ -2,6 +2,7 @@ import tensorflow as tf
 
 from code.attention_model.Attention import GlobalSelfAttention
 from code.attention_model.FeedForward import FeedForward
+from code.attention_model.PositionalEmbedding import PositionalEmbedding
 
 
 class EncoderLayer(tf.keras.layers.Layer):
