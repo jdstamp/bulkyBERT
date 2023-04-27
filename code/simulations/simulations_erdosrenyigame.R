@@ -2,14 +2,15 @@ library(sgnesR)
 library(abind)
 library(rhdf5)
 
-network_generator <- function(ngen){
+network_generator <- function(n_genes){
                         ##Generation of a random scale-free network with 20 nodes using an Erdos-Renyi network model. Time points: 15, genes:
-                        g <- erdos.renyi.game(ngen,.15, directed=TRUE)
+                        g <- erdos.renyi.game(n_genes,.15, directed=TRUE)
 
                         # Assigning initial values to the RNAs and protein products to each node randomly.
                         V(g)$Ppop <- (sample(100,vcount(g), rep=TRUE))
                         V(g)$Rpop <- (sample(100, vcount(g), rep=TRUE))
-                        return(g)} #G is the graph structure and it is different for each erdo.renyi.game function
+                        return(g)
+ } #G is the graph structure and it is different for each erdo.renyi.game function
 
 simulation <- function(g, timep) {## Changes graphical structure a bit -
                 # Assign -1 or +1 to each directed edge to represent that an interacting node is acting either as a
