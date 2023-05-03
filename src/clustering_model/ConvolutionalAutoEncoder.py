@@ -14,6 +14,7 @@ class ConvolutionalAutoEncoder(tf.keras.Model):
                     strides=2,
                     padding="same",
                     activation="relu",
+                    input_shape=target_shape,
                 ),
                 tf.keras.layers.Conv2D(
                     filters=64,
