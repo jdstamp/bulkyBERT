@@ -40,7 +40,8 @@ simulate_gene_expression <- function(graph, n_time_points) {
   
   # Defines a data object for the input which includes the network topology and other parameters such as the initial populations of
   # RNA and protein molecules of each node/gene, rate constants, delay parameters and initial population parameters of different molecules.
-  rsg <- new("rsgns.data", network = graph, rconst = reaction_rate_constants)
+  rsg <-
+    new("rsgns.data", network = graph, rconst = reaction_rate_constants)
   #Call the R function for SGN simulator
   simulation_data <-
     rsgns.rn(rsg, rp, timeseries = FALSE, sample = n_time_points)
@@ -77,7 +78,7 @@ h5write(stacked_expression, h5_file, "expression/data")
 h5write(stacked_labels, h5_file, "expression/labels")
 
 ## CODE TO READ IN FILE ##
-file <- h5read(file = "sim_gene_expression.h5",
-               name = "expression/data")
-labels <- h5read(file = "sim_gene_expression.h5",
-               name = "expression/labels")
+# file <- h5read(file = "sim_gene_expression.h5",
+#                name = "expression/data")
+# labels <- h5read(file = "sim_gene_expression.h5",
+#                  name = "expression/labels")
