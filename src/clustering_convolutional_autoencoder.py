@@ -9,20 +9,17 @@ from src.clustering_model.ConvolutionalAutoEncoder import ConvolutionalAutoEncod
 from src.clustering_model.GeneClusteringModel import GeneClusteringModel
 
 data_sim = h5py.File("../data/data_simulated/sim_erdosrenyi.h5", "r")
-train_examples = data_sim.get("expression/data")[:]
-train_labels = data_sim.get("expression/labels")[:]
-train_examples = np.transpose(train_examples, (0, 2, 1))
+train_examples = data_sim.get("expression/data")
+train_labels = data_sim.get("expression/labels")
+train_examples = np.transpose(train_examples[:], (0, 2, 1))
+train_labels = np.transpose(train_labels[:], (1, 0))
+train_labels = tf.repeat(train_labels, train_examples.shape[1], axis=1)
+train_examples = tf.reshape(train_examples, (-1, 16))
+train_labels = tf.reshape(train_labels, (-1, 1))
 
 transformer = RecurrencePlot(threshold=None)
-train_images = []
-for sample in train_examples:
-    padded = np.pad(
-        sample, ((0, 0), (0, 0))
-    )  # in case the image is not a power of 2, fix here
-    train_images.append(transformer.fit_transform(padded[:1, :]))
-train_images = np.array(train_images)
-train_images = np.reshape(train_images, (-1, 16, 16, 1))
-train_labels = np.reshape(train_labels, (-1, 1))
+train_images = transformer.transform(train_examples)
+train_images = tf.expand_dims(train_images, axis=3)
 print(train_images.shape)
 
 test = ConvolutionalAutoEncoder()
@@ -37,12 +34,13 @@ accuracy = tf.keras.metrics.Accuracy()
 kf = StratifiedKFold(n_splits=10)
 kf.get_n_splits(train_images)
 my_counter = 1
-for train_index, test_index in kf.split(train_images, train_labels):
-    x_train = train_images[train_index]
-    x_test = train_images[test_index]
+for i, (train_index, test_index) in enumerate(kf.split(train_images, train_labels)):
+    print(f"Fold {i}")
+    x_train = tf.gather(train_images, indices=train_index)
+    x_test = tf.gather(train_images, indices=test_index)
 
-    y_train = train_labels[train_index]
-    y_test = train_labels[test_index]
+    y_train = tf.gather(train_labels, indices=train_index)
+    y_test = tf.gather(train_labels, indices=test_index)
 
     gene_clustering_model = GeneClusteringModel(
         input_shape=train_images[0].shape, num_clusters=num_clusters

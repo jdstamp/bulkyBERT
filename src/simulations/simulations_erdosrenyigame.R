@@ -1,25 +1,27 @@
 library(sgnesR)
 library(abind)
 library(rhdf5)
+library(igraph)
 
 generate_network <- function(n_genes) {
-  ##Generation of a random scale-free network with 20 nodes using an Erdos-Renyi network model. Time points: 15, genes:
-  graph <-
-    erdos.renyi.game(n_genes, .15, directed = TRUE)
-
+  # Generation of a random scale-free network with 20 nodes using an Erdos-Renyi network model. Time points: 15, genes:
+  graph <- sample_gnp(n_genes, .15, directed = TRUE)
+  
   # Assigning initial values to the RNAs and protein products to each node randomly.
   V(graph)$Ppop <- (sample(100, vcount(graph), rep = TRUE))
   V(graph)$Rpop <- (sample(100, vcount(graph), rep = TRUE))
+  
+  ## Changes graphical structure a bit -
+  # Assign -1 or +1 to each directed edge to represent that an interacting node is acting either as a
+  # activator, if +1, or as a suppressor, if -1
+  activation_weights <- sample(c(1,-1), ecount(graph), rep = TRUE, p = c(.8, .2))
+  E(graph)$op <- activation_weights
+  
   return(graph)
 }
 
 
 simulate_gene_expression <- function(graph, n_time_points) {
-    ## Changes graphical structure a bit -
-    # Assign -1 or +1 to each directed edge to represent that an interacting node is acting either as a
-    #activator, if +1, or as a suppressor, if -1
-    activation_weights <- sample(c(1,-1), ecount(graph), rep = TRUE, p = c(.8, .2))
-    E(graph)$op <- activation_weights
 
     end_time = n_time_points * 500 - 500
     # Specifying global reaction parameters. Defines the initial parameters which include “start time”, “stop time” and “read-out interval” for time series data
@@ -39,25 +41,25 @@ simulate_gene_expression <- function(graph, n_time_points) {
     # RNA and protein molecules of each node/gene, rate constants, delay parameters and initial population parameters of different molecules.
     rsg <- new("rsgns.data", network = graph, rconst = reaction_rate_constants)
     #Call the R function for SGN simulator
-    simulation_data <- rsgns.rn(rsg, rp, timeseries = TRUE)
+    simulation_data <- rsgns.rn(rsg, rp, timeseries = FALSE, sample = n_time_points)
     return(simulation_data$expression)
-  }
+}
 
 n_genes <- 20
 n_time_points <- 16
-network <- generate_network(n_genes)
-l <- 100
+num_replications <- 100
 num_networks <- 2
 
 stacked_labels <- NULL
 stacked_expression <- NULL
 
 for (g in 1:num_networks) {
-  for (i in 1:l) {
+  network <- generate_network(n_genes)
+  for (i in 1:num_replications) {
     exp <- simulate_gene_expression(network, n_time_points)
     stacked_expression <-
-      abind(exp, stacked_expression, along = 3)
-    stacked_labels <- rbind(g, stacked_labels)
+      abind(stacked_expression, exp, along = 3)
+    stacked_labels <- rbind(stacked_labels, g)
   }
 }
 
