@@ -139,4 +139,5 @@ data/*.csv
 .idea
 .DS_Store
 
+.RData
 .Rhistory

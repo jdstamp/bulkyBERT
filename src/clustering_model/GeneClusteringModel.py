@@ -82,7 +82,9 @@ class GeneClusteringModel(object):
                 y_pred_last = np.copy(self.y_pred)
                 if ite > 0 and delta_label < tolerance:
                     print(f"delta_label: {delta_label} < tolerance: {tolerance}")
-                    print(f"Reached tolerance threshold {tolerance}. Stopping training.")
+                    print(
+                        f"Reached tolerance threshold {tolerance}. Stopping training."
+                    )
                     break
 
             # train on batch
