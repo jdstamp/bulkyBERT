@@ -61,3 +61,4 @@ for count, idx in enumerate(selected):
     plt.axis('off')
 
     plt.savefig('data/images/example_%s.png' % idx, bbox_inches='tight')
+    
