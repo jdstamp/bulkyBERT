@@ -70,7 +70,7 @@ for (p in 1:length(prob_edges)) {
   }
 }
 
-h5_file <- paste0("sim_gene_expression.h5")
+h5_file <- "sim_gene_expression.h5"
 h5createFile(h5_file)
 h5createGroup(h5_file, "expression")
 
