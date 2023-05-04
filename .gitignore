@@ -138,5 +138,5 @@ data/*.csv
 # Pycharm
 .idea
 .DS_Store
-
+data/images/*.png
 .Rhistory
