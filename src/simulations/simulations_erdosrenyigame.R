@@ -3,9 +3,9 @@ library(abind)
 library(rhdf5)
 library(igraph)
 
-generate_network <- function(n_genes) {
+generate_network <- function(n_genes, prob_edges) {
   # Generation of a random scale-free network with 20 nodes using an Erdos-Renyi network model. Time points: 15, genes:
-  graph <- sample_gnp(n_genes, .15, directed = TRUE)
+  graph <- sample_gnp(n_genes, prob_edges, directed = TRUE)
   
   # Assigning initial values to the RNAs and protein products to each node randomly.
   V(graph)$Ppop <- (sample(100, vcount(graph), rep = TRUE))
@@ -49,26 +49,34 @@ n_genes <- 20
 n_time_points <- 16
 num_replications <- 100
 num_networks <- 2
+prob_edges_network1 <- 0.2
+prob_edges_network2 <- c(0.1, 0.13)
 
-stacked_labels <- NULL
 stacked_expression <- NULL
+stacked_labels <- NULL
 
-for (g in 1:num_networks) {
-  network <- generate_network(n_genes)
+for(p in 1:2) {
+  network1 <- generate_network(n_genes, prob_edges_network1)
   for (i in 1:num_replications) {
-    exp <- simulate_gene_expression(network, n_time_points)
     stacked_expression <-
-      abind(stacked_expression, exp, along = 3)
-    stacked_labels <- rbind(stacked_labels, g)
+      abind(stacked_expression, exp_network1, along = 3)
+    stacked_labels <- rbind(stacked_labels, 0)
   }
+  p_network2 <- prob_edges_network2[p]
+  network2 <- generate_network(n_genes, p_network2)
+  for (i in 1:num_replications) {
+    exp_network2 <- simulate_gene_expression(network2, n_time_points)
+    stacked_expression <-
+      abind(stacked_expression, exp_network2, along = 3)
+    stacked_labels <- rbind(stacked_labels, 1)
+  }
+  h5_file <- paste0("sim_gene_expression_",p,".h5")
+  h5createFile(h5_file)
+  h5createGroup(h5_file, "expression")
+  
+  h5write(stacked_expression, h5_file, "expression/data")
+  h5write(stacked_labels, h5_file, "expression/labels")
 }
-
-h5_file <- "sim_erdosrenyi.h5"
-h5createFile(h5_file)
-h5createGroup(h5_file, "expression")
-
-h5write(stacked_expression, h5_file, "expression/data")
-h5write(stacked_labels, h5_file, "expression/labels")
 
 ## CODE TO READ IN FILE ##
 #file <- h5read(file = "sim_erdosrenyi.h5",
