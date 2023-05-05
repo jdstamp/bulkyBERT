@@ -1,63 +1,88 @@
+import random
+
 import h5py
 import numpy as np
+import pandas as pd
 from pyts.image import RecurrencePlot
+from matplotlib import pyplot as plt
 import tensorflow as tf
-from sklearn.metrics import silhouette_score
+from sklearn.metrics import (
+    silhouette_score,
+    adjusted_rand_score,
+    adjusted_mutual_info_score,
+)
 from sklearn.model_selection import StratifiedKFold
 
-from src.clustering_model.ConvolutionalAutoEncoder import ConvolutionalAutoEncoder
 from src.clustering_model.GeneClusteringModel import GeneClusteringModel
+from src.plotting.latent_pca import plot_cluster_pca
+from src.preprocess.load_periodic_sims import load_periodic_sims
 
-data_sim = h5py.File("../data/data_simulated/sim_erdosrenyi.h5", "r")
-train_examples = data_sim.get("expression/data")
-train_labels = data_sim.get("expression/labels")
-train_examples = np.transpose(train_examples[:], (0, 2, 1))
-train_labels = np.transpose(train_labels[:], (1, 0))
-train_labels = tf.repeat(train_labels, train_examples.shape[1], axis=1)
-train_examples = tf.reshape(train_examples, (-1, 16))
-train_labels = tf.reshape(train_labels, (-1, 1))
+periodic_signal, periodic_labels = load_periodic_sims(0.01)
 
 transformer = RecurrencePlot(threshold=None)
-train_images = transformer.transform(train_examples)
-train_images = tf.expand_dims(train_images, axis=3)
-print(train_images.shape)
+recurrence_plots = transformer.transform(periodic_signal)
+recurrence_plots = tf.expand_dims(recurrence_plots, axis=3)
+print(recurrence_plots.shape)
 
-test = ConvolutionalAutoEncoder()
-optimizer = tf.keras.optimizers.Adam()
-test.model.compile(optimizer=optimizer, loss="mse")
-test.model.fit(train_images, train_images, batch_size=32, epochs=10, verbose=0)
-test.model.summary()
-
-
-num_clusters = len(np.unique(train_labels))
-accuracy = tf.keras.metrics.Accuracy()
+num_clusters = len(np.unique(periodic_labels))
 kf = StratifiedKFold(n_splits=10)
-kf.get_n_splits(train_images)
-my_counter = 1
-for i, (train_index, test_index) in enumerate(kf.split(train_images, train_labels)):
-    print(f"Fold {i}")
-    x_train = tf.gather(train_images, indices=train_index)
-    x_test = tf.gather(train_images, indices=test_index)
+kf.get_n_splits(recurrence_plots)
+evaluation_metrics = {
+    "ARI": [],
+    "AMI": [],
+    "Sil": [],
+}
 
-    y_train = tf.gather(train_labels, indices=train_index)
-    y_test = tf.gather(train_labels, indices=test_index)
+for i, (train_index, test_index) in enumerate(
+    kf.split(recurrence_plots, periodic_labels)
+):
+    print(f"Fold {i + 1}")
+    x_train = tf.gather(recurrence_plots, indices=train_index)
+    x_test = tf.gather(recurrence_plots, indices=test_index)
+
+    y_train = np.squeeze(tf.gather(periodic_labels, indices=train_index).numpy())
+    y_test = np.squeeze(tf.gather(periodic_labels, indices=test_index))
 
     gene_clustering_model = GeneClusteringModel(
-        input_shape=train_images[0].shape, num_clusters=num_clusters
+        input_shape=recurrence_plots[0].shape, num_clusters=num_clusters
     )
 
     gene_clustering_model.compile(
-        loss=["kld", "mse"], loss_weights=[0.1, 1], optimizer="adam"
+        loss=["kld", "mse"], loss_weights=[5, 1], optimizer="adam"
     )
     gene_clustering_model.fit(
         x_train,
         tolerance=1e-3,
-        max_training_steps=1000,
+        max_training_steps=5000,
         update_interval=100,
     )
 
     y_pred = gene_clustering_model.predict_clusters(x_test)
 
-    acc = accuracy(y_test, y_pred)
+    ARI = adjusted_rand_score(y_test, y_pred)
+    AMI = adjusted_mutual_info_score(y_test, y_pred)
     sil_score = silhouette_score(gene_clustering_model.encoder.predict(x_test), y_pred)
-    print(f"Accuracy: {acc}, Silhhouette score: {sil_score}")
+    evaluation_metrics["ARI"].append(ARI)
+    evaluation_metrics["AMI"].append(AMI)
+    evaluation_metrics["Sil"].append(sil_score)
+    print(
+        f"Adjusted Rand Index: {ARI}",
+        f"Adjusted Mutual Information: {AMI}",
+        f"Silhhouette score: {sil_score}",
+    )
+    latent_representation = gene_clustering_model.encoder.predict(x_train)
+    predicted_clusters = gene_clustering_model.predict_clusters(x_train)
+
+    plt.figure()
+    plt.subplot(1, 2, 1)
+    plot_cluster_pca(latent_representation, y_train)
+    plt.title("True")
+    plt.subplot(1, 2, 2)
+    plot_cluster_pca(latent_representation, predicted_clusters)
+    plt.title("Inferred")
+    plt.ylabel("")
+    plt.savefig(f"../data/images/latent_pca_{i + 1}.png")
+
+pd.DataFrame.from_dict(evaluation_metrics).to_csv(
+    "../data/evaluation/clustering_evaluation.csv"
+)
