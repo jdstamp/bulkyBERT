@@ -1,9 +1,7 @@
 
-pacman::p_load(
-  tidyverse,
-  str2str,
-  rhdf5
-)
+library(tidyverse)
+library(str2str)
+library(rhdf5)
 
 # pull in data and reshape
 shoemaker <- read.csv("data/shoemaker_data.csv") %>% 
