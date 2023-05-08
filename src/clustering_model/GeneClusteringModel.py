@@ -56,6 +56,7 @@ class GeneClusteringModel(object):
 
         # Step 2: initialize cluster centers using k-means
         kmeans = KMeans(n_clusters=self.num_clusters, n_init=20)
+        
         self.y_pred = kmeans.fit_predict(self.encoder.predict(x))
         y_pred_last = np.copy(self.y_pred)
         self.model.get_layer(name="cluster_labels").set_weights(
@@ -85,6 +86,12 @@ class GeneClusteringModel(object):
                     print(
                         f"Reached tolerance threshold {tolerance}. Stopping training."
                     )
+                    
+                    kmeans = KMeans(n_clusters=self.num_clusters, n_init=20)
+        
+                    self.y_pred = kmeans.fit_predict(self.encoder.predict(x))
+            
+                    #self.inertia = kmeans.inertia_
                     break
 
             # train on batch
