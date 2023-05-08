@@ -1,6 +1,3 @@
-import random
-
-import h5py
 import numpy as np
 import pandas as pd
 from pyts.image import RecurrencePlot
@@ -15,9 +12,9 @@ from sklearn.model_selection import StratifiedKFold
 
 from src.clustering_model.GeneClusteringModel import GeneClusteringModel
 from src.plotting.latent_pca import plot_cluster_pca
-from src.preprocess.load_periodic_sims import load_periodic_sims
+from src.preprocess.load_data import load_periodic_sims
 
-periodic_signal, periodic_labels = load_periodic_sims(0.01)
+periodic_signal, periodic_labels = load_periodic_sims(0.05)
 
 transformer = RecurrencePlot(threshold=None)
 recurrence_plots = transformer.transform(periodic_signal)

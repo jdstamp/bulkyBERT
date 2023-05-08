@@ -9,7 +9,7 @@ from src.clustering_model.ConvolutionalAutoEncoder import ConvolutionalAutoEncod
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-from src.preprocess.load_periodic_sims import load_periodic_sims
+from src.preprocess.load_data import load_periodic_sims
 
 periodic_signal, periodic_labels = load_periodic_sims(0.1)
 
