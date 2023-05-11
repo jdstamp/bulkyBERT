@@ -10,9 +10,10 @@ shoemaker <- read.csv("data/shoemaker_data.csv") %>%
   pivot_wider(names_from=X, values_from=value)
 
 # filter to genes within top 10% variance
-gene_vars <- apply(shoemaker[,-1], 2, var)
-cutoff <- quantile(gene_vars, 0.9)
-shoemaker <- shoemaker[,c(TRUE, gene_vars > cutoff)]
+#gene_means <- apply(shoemaker[,-1], 2, var)
+#gene_vars <- apply(shoemaker[,-1], 2, var)
+#cutoff <- quantile(gene_vars, 0.9)
+#shoemaker <- shoemaker[,c(TRUE, gene_vars > cutoff)]
 
 # reformat metadata
 shoemaker_meta <- read.csv("data/shoemaker_meta.csv") %>% 
@@ -32,8 +33,8 @@ samples_summary <- shoemaker_meta %>%
   filter(n_timepoints == 14) %>% 
   ungroup()
 
-group_labels <- samples_summary$Group
-gene_labels <- colnames(shoemaker[,-1])
+group_labels <- c(samples_summary$Group)
+gene_labels <- c(colnames(shoemaker[,-1]))
 
 shoemaker_reformat <-
   map2(samples_summary$Group, samples_summary$Replicate, function(group, replicate, data) {
@@ -54,7 +55,7 @@ shoemaker_reformat <-
       select(Gene, c(paste0("Timepoint_", 1:14)))
     
     # replace non-positive values with small positive number
-    ex[, 2:15][ex[, 2:15] <= 0] <- 1e-5
+    ex[, 2:15][ex[, 2:15] < 0] <- 0
     
     # obtain timepoints 15 and 16 by adding some noise multiplicatively
     noise_1 <- rnorm(nrow(ex), sd = 0.1)
@@ -69,11 +70,27 @@ shoemaker_reformat <-
   }, data = shoemaker) %>% 
   ld2a(dim.order=c(3,1,2))
 
+shoemaker_flat <- shoemaker_reformat
+dim(shoemaker_flat) <- c(14*39544, 16)
+
+gene_labels <- rep(gene_labels, 14)
+group_labels <- unlist(lapply(group_labels, function(g) rep(g, 39544)))
+
+gene_sd <- apply(shoemaker_flat, 1, sd)
+gene_mean <- apply(shoemaker_flat, 1, mean)
+gene_cv <- gene_sd/gene_mean
+
+cutoff <- quantile(gene_cv, 0.975)
+
+shoemaker_flat <- shoemaker_flat[which(gene_cv > cutoff),]
+gene_labels <- gene_labels[which(gene_cv > cutoff)]
+group_labels <- group_labels[which(gene_cv > cutoff)]
+
 h5_file <- "data/shoemaker.h5"
 h5createFile(h5_file)
 
 h5createGroup(h5_file,"expression")
-h5write(shoemaker_reformat, h5_file, "expression/data")
+h5write(shoemaker_flat, h5_file, "expression/data")
 h5write(group_labels, h5_file, "expression/group_labels")
 h5write(gene_labels, h5_file, "expression/gene_labels")
 h5ls(h5_file)
